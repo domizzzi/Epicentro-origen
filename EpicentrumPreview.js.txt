@@ -1,0 +1,387 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
+
+// Define categories with data (40 items defined)
+const categories = [
+  // Row 1 (0-9)
+  { emoji: '🛃', label: 'Visa U', color: 'bg-lime-100 text-lime-700', content: 'Visa especial para víctimas de delitos que colaboran con autoridades.' },
+  { emoji: '🛡️', label: 'Asilo político', color: 'bg-blue-100 text-blue-800', content: 'Protección para quienes han sufrido persecución.' },
+  { emoji: '🇺🇸', label: 'Ciudadanía', color: 'bg-red-100 text-red-800', content: 'Proceso para obtener la nacionalidad estadounidense.' },
+  { emoji: '📄', label: 'TPS o DACA', color: 'bg-green-100 text-green-800', content: 'Programas que ofrecen protección temporal.' },
+  { emoji: '💼', label: 'Trabajo y derechos', color: 'bg-purple-100 text-purple-800', content: 'Información sobre empleo y derechos laborales.' },
+  { emoji: '🏠', label: 'Renta y vivienda', color: 'bg-pink-100 text-pink-800', content: 'Opciones de alojamiento y derechos de inquilinos.' },
+  { emoji: '❤️‍🩹', label: 'Salud y educación', color: 'bg-rose-100 text-rose-800', content: 'Acceso a servicios de salud y educación básica.' },
+  { emoji: '🛑', label: 'Detención y defensa legal', color: 'bg-gray-200 text-red-600', content: 'Qué hacer en caso de detención migratoria.' },
+  { emoji: '📂', label: 'Trámites y documentos', color: 'bg-teal-100 text-teal-800', content: 'Gestión de papeles migratorios y legales.' },
+  { emoji: '🤝', label: 'Ayuda comunitaria', color: 'bg-yellow-100 text-yellow-700', content: 'Apoyo de organizaciones y voluntarios.' },
+  // Row 2 (10-19)
+  { emoji: '⚠️', label: 'Abuso laboral', color: 'bg-yellow-200 text-yellow-900', content: 'Protección frente a explotación y abusos.' },
+  { emoji: '🎓', label: 'Educación y becas', color: 'bg-indigo-100 text-indigo-800', content: 'Oportunidades educativas y ayudas escolares.' },
+  { emoji: '📝', label: 'Formularios migratorios', color: 'bg-slate-100 text-slate-800', content: 'Formatos oficiales para trámites.' },
+  { emoji: '📍', label: 'Información por estado', color: 'bg-orange-100 text-orange-800', content: 'Regulaciones locales en EE.UU.' },
+  { emoji: '🔐', label: 'Opciones sin papeles', color: 'bg-gray-100 text-gray-700', content: 'Alternativas legales sin documentos migratorios.' },
+  { emoji: '🛂', label: 'CBP One – Citas migratorias', color: 'bg-blue-200 text-blue-900', content: 'Agendamiento de citas con CBP.' },
+  { emoji: '📱', label: 'Apps útiles', color: 'bg-blue-100 text-blue-800', content: 'Aplicaciones recomendadas para inmigrantes.' },
+  { emoji: '⚖️', label: 'Servicios legales', color: 'bg-purple-100 text-purple-800', content: 'Abogados y defensores migratorios cercanos.' },
+  { emoji: '🧑‍🏫', label: 'Clases de inglés', color: 'bg-green-100 text-green-800', content: 'Dónde y cómo tomar clases gratuitas o pagadas.' },
+  { emoji: '🚸', label: 'Escuelas y niños', color: 'bg-pink-100 text-pink-800', content: 'Ayuda escolar, inscripción y derechos.' },
+  // Row 3 (20-29)
+  { emoji: '💳', label: 'Abrir cuenta bancaria', color: 'bg-amber-100 text-amber-800', content: 'Cómo abrir cuentas aún sin seguro social.' },
+  { emoji: '🚌', label: 'Transporte público', color: 'bg-cyan-100 text-cyan-800', content: 'Guías para usar el transporte y obtener pases.' },
+  { emoji: '🏥', label: 'Centros de salud gratis', color: 'bg-rose-100 text-rose-800', content: 'Clínicas de bajo costo o gratuitas.' },
+  { emoji: '👮', label: 'Tus derechos con la policía', color: 'bg-gray-100 text-gray-800', content: 'Cómo actuar en detenciones o paradas.' },
+  { emoji: '💬', label: 'Traductores y asistencia', color: 'bg-teal-100 text-teal-900', content: 'Herramientas para traducir y pedir ayuda.' },
+  { emoji: '🏦', label: 'Créditos y préstamos', color: 'bg-green-200 text-green-900', content: 'Cómo acceder a microcréditos y préstamos personales.' },
+  { emoji: '🧾', label: 'Impuestos y formularios', color: 'bg-yellow-200 text-yellow-900', content: 'Cómo presentar tus impuestos con o sin ITIN.' },
+  { emoji: '🛒', label: 'Asistencia alimentaria', color: 'bg-pink-200 text-pink-900', content: 'Accede a bancos de comida y programas de ayuda.' },
+  { emoji: '📬', label: 'Dirección postal', color: 'bg-blue-100 text-blue-900', content: 'Opciones si no tienes domicilio fijo.' },
+  { emoji: '📚', label: 'Recursos gratuitos', color: 'bg-indigo-100 text-indigo-900', content: 'Sitios web y documentos útiles sin costo.' },
+  // Row 4 (30-39)
+  { emoji: '🛏️', label: 'Refugios temporales', color: 'bg-orange-100 text-orange-900', content: 'Lugares donde puedes dormir seguro.' },
+  { emoji: '🎙️', label: 'Podcasts educativos', color: 'bg-rose-200 text-rose-900', content: 'Programas que te informan y motivan diariamente.' },
+  { emoji: '🚗', label: 'Licencia de conducir', color: 'bg-lime-100 text-lime-800', content: 'Requisitos y proceso para obtenerla en tu estado.' },
+  { emoji: '💰', label: 'Enviar dinero', color: 'bg-blue-100 text-blue-900', content: 'Formas seguras y económicas de enviar remesas.' },
+  { emoji: '✈️', label: 'Viajes y familia', color: 'bg-red-100 text-red-900', content: 'Información sobre reunificación familiar y permisos de viaje.' },
+  { emoji: '🎭', label: 'Cultura y eventos', color: 'bg-green-100 text-green-900', content: 'Eventos culturales y actividades comunitarias locales.' },
+  { emoji: '🗳️', label: 'Participación cívica', color: 'bg-purple-100 text-purple-900', content: 'Formas de involucrarte en tu comunidad local.' },
+  { emoji: '🆘', label: 'Emergencias generales', color: 'bg-pink-100 text-pink-900', content: 'Números y recursos para diferentes tipos de emergencias.' },
+  { emoji: '🧘', label: 'Bienestar mental', color: 'bg-rose-100 text-rose-900', content: 'Recursos para el manejo del estrés y la salud emocional.' },
+  { emoji: '❓', label: 'Preguntas frecuentes', color: 'bg-teal-100 text-teal-900', content: 'Respuestas a dudas comunes sobre inmigración.' },
+];
+
+// Array with 25 informative phrases (unchanged)
+const informativePhrases = [
+    "Tienes derecho a permanecer en silencio si te detiene la policía.",
+    "Guarda el número de un abogado de inmigración de confianza.",
+    "No firmes ningún documento que no entiendas sin consultar a un abogado.",
+    "Busca organizaciones locales que ofrezcan ayuda legal gratuita o de bajo costo.",
+    "Conoce tus derechos laborales: tienes derecho a un salario justo y condiciones seguras.",
+    "El asilo es una protección para quienes temen regresar a su país por persecución.",
+    "La Visa U es para víctimas de ciertos crímenes que colaboran con las autoridades.",
+    "Infórmate sobre los requisitos para el TPS o DACA si podrías calificar.",
+    "Existen recursos comunitarios para encontrar vivienda temporal o asistencia.",
+    "Hay clínicas de salud comunitarias que ofrecen servicios a bajo costo o gratis.",
+    "Tus hijos tienen derecho a inscribirse en la escuela pública sin importar tu estatus.",
+    "Aprender inglés puede abrirte muchas puertas; busca clases gratuitas en tu área.",
+    "Puedes abrir una cuenta bancaria en algunos bancos usando tu ITIN o pasaporte.",
+    "Documenta cualquier incidente de abuso laboral y busca ayuda legal.",
+    "Mantén copias de todos tus documentos importantes en un lugar seguro.",
+    "Si eres detenido por ICE, tienes derecho a llamar a tu consulado.",
+    "La 'carga pública' puede afectar algunas solicitudes de residencia permanente.",
+    "Consulta fuentes oficiales como USCIS.gov para información migratoria precisa.",
+    "Existen programas de asistencia alimentaria como SNAP o bancos de comida locales.",
+    "Infórmate sobre cómo obtener una licencia de conducir en tu estado, si es posible.",
+    "Participa en talleres informativos sobre tus derechos y opciones.",
+    "Crea un plan de emergencia familiar en caso de separación.",
+    "No compartas información personal sensible con desconocidos.",
+    "La violencia doméstica es un crimen; busca ayuda si estás en una situación de abuso.",
+    "Cuida tu salud mental; busca grupos de apoyo o consejería si lo necesitas."
+];
+
+
+// Mapping of category labels to relevant external links
+const extraLinksMap = {
+  'Visa U': ['https://www.uscis.gov/es/visau', 'https://cliniclegal.org/resources/visa-u'],
+  'Asilo político': ['https://www.aclu.org/issues/immigrants-rights/asylum', 'https://www.justice.gov/eoir/asylum-and-withholding-removal'],
+  // ... (rest of links)
+};
+
+// --- Reusable Carousel Component ---
+const CategoryCarousel = ({ categorySlice, onCategoryClick }) => {
+    const animationDuration = (categorySlice.length || 10) * 12;
+    const doubledCategories = [...categorySlice, ...categorySlice];
+    if (!categorySlice || categorySlice.length === 0) return null;
+
+    return (
+        <div className="w-full overflow-hidden py-2 relative">
+            <motion.div
+                className="flex space-x-2"
+                style={{ width: 'max-content' }}
+                animate={{ x: [0, '-50%'] }}
+                transition={{ ease: 'linear', duration: animationDuration, repeat: Infinity, repeatType: 'loop' }}
+            >
+                {doubledCategories.map((cat, idx) => (
+                    <motion.button
+                        key={`${cat.label}-carousel-${idx}`}
+                        whileHover={{ scale: 1.05, y: -2, transition: { duration: 0.1 } }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onCategoryClick(cat)}
+                        className={`min-w-[80px] sm:min-w-[90px] flex-shrink-0 rounded-lg shadow px-2 py-1 flex flex-col items-center justify-center text-xs transition-colors duration-150 ${cat.color}`}
+                        style={{ touchAction: 'pan-y' }}
+                    >
+                        <span className="text-xl sm:text-2xl mb-0.5 pointer-events-none">{cat.emoji}</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-center pointer-events-none">{cat.label}</span>
+                    </motion.button>
+                ))}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// --- Placeholder Page Components ---
+const HomePage = ({ categories, onCategoryClick }) => {
+    return (
+        <div className="p-4 space-y-1">
+            <CategoryCarousel categorySlice={categories.slice(0, 10)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(10, 20)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(20, 30)} onCategoryClick={onCategoryClick} />
+            <CategoryCarousel categorySlice={categories.slice(30, 40)} onCategoryClick={onCategoryClick} />
+        </div>
+    );
+};
+const CategoriesPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4 dark:text-white">Categorías</h1><p className="text-gray-600 dark:text-gray-400">Aquí se mostrarán todas las categorías...</p></div>;
+const AssistantPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4 dark:text-white">Asistente</h1><p className="text-gray-600 dark:text-gray-400">El chat con el asistente irá aquí...</p></div>;
+const ProfilePage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4 dark:text-white">Perfil</h1><p className="text-gray-600 dark:text-gray-400">La información y configuración del perfil irán aquí...</p></div>;
+
+// --- Bottom Navigation Component (Unchanged) ---
+const BottomNavigationBar = ({ currentPage, setCurrentPage, darkMode, themeColor }) => {
+    const navItems = [ { name: 'inicio', label: 'Inicio', icon: '🏠' }, { name: 'categorias', label: 'Categorías', icon: '📚' }, { name: 'asistente', label: 'Asistente', icon: '💬' }, { name: 'perfil', label: 'Perfil', icon: '👤' }, ];
+    const themeActiveBgClasses = { blue: 'bg-blue-100', red: 'bg-red-100', green: 'bg-green-100', yellow: 'bg-yellow-100', purple: 'bg-purple-100', pink: 'bg-pink-100', orange: 'bg-orange-100', teal: 'bg-teal-100', indigo: 'bg-indigo-100', gray: 'bg-gray-200', lime: 'bg-lime-100', cyan: 'bg-cyan-100' };
+    const themeTextClasses = { blue: 'text-blue-900', red: 'text-red-900', green: 'text-green-900', yellow: 'text-yellow-900', purple: 'text-purple-900', pink: 'text-pink-900', orange: 'text-orange-900', teal: 'text-teal-900', indigo: 'text-indigo-900', gray: 'text-gray-900', lime: 'text-lime-900', cyan: 'text-cyan-900' };
+    const themeDarkTextClasses = { blue: 'dark:text-blue-100', red: 'dark:text-red-100', green: 'dark:text-green-100', yellow: 'dark:text-yellow-100', purple: 'dark:text-purple-100', pink: 'dark:text-pink-100', orange: 'dark:text-orange-100', teal: 'dark:text-teal-100', indigo: 'dark:text-indigo-100', gray: 'dark:text-gray-100', lime: 'dark:text-lime-100', cyan: 'dark:text-cyan-100' };
+    const currentThemeActiveBg = themeActiveBgClasses[themeColor] || 'bg-gray-200';
+    const activeTextColorDark = themeDarkTextClasses[themeColor] || 'text-white';
+    const inactiveTextColorDark = 'text-gray-400';
+    const activeTextColorLight = themeTextClasses[themeColor] || 'text-blue-900';
+    const inactiveTextColorLight = 'text-gray-500';
+
+    return (
+        <nav className={`fixed bottom-0 left-0 right-0 border-t shadow-md z-40 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="flex justify-around items-center h-16 max-w-screen-md mx-auto px-2">
+                {navItems.map((item) => {
+                    const isActive = currentPage === item.name;
+                    return (
+                        <button key={item.name} onClick={() => setCurrentPage(item.name)} className={`flex flex-col items-center justify-center text-center px-2 py-1 rounded-md transition-colors duration-150 w-1/4 h-full ${ isActive ? (darkMode ? ` ${activeTextColorDark}` : `${currentThemeActiveBg} ${activeTextColorLight}`) : (darkMode ? inactiveTextColorDark : inactiveTextColorLight) } ${darkMode ? 'hover:text-gray-100' : 'hover:bg-gray-100'}`} >
+                            <span className="text-2xl mb-0.5">{item.icon}</span>
+                            <span className="text-xs font-medium">{item.label}</span>
+                        </button>
+                    );
+                })}
+            </div>
+        </nav>
+    );
+};
+
+
+// --- Main Component (Refactored for Pages) ---
+export default function EpicentrumPreview() {
+  // State Hooks
+  const [darkMode, setDarkMode] = useState(true);
+  const [themeColor, setThemeColor] = useState('blue');
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [chatHistory, setChatHistory] = useState(() => { /* Initialize chat history */ try { const saved = localStorage.getItem('chatHistory'); const initialHistory = saved ? JSON.parse(saved) : []; if (initialHistory.length === 0) { initialHistory.push({ type: 'assistant', label: 'Asistente', content: '¡Hola! ¿En qué puedo ayudarte hoy?' }); } return initialHistory; } catch (error) { console.error("Failed to parse chat history from localStorage", error); return [{ type: 'assistant', label: 'Asistente', content: '¡Hola! ¿En qué puedo ayudarte hoy?' }]; } });
+  const [inputText, setInputText] = useState('');
+  const [activeModal, setActiveModal] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [selectedCategoryData, setSelectedCategoryData] = useState(null);
+
+  // --- State for Emergency SOS Modal ---
+  const [emergencyModalView, setEmergencyModalView] = useState('main');
+  const [emergencyContact, setEmergencyContact] = useState(() => localStorage.getItem('emergencyContact') || '');
+  const [sosSendAttemptMessage, setSosSendAttemptMessage] = useState('');
+  const [isContactSaved, setIsContactSaved] = useState(!!localStorage.getItem('emergencyContact'));
+
+  // Refs (will move to AssistantPage later)
+  const chatContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  // State for current page
+  const [currentPage, setCurrentPage] = useState('inicio');
+
+  // Effect for the informative phrases carousel rotation
+  useEffect(() => {
+      const interval = setInterval(() => {
+        setCurrentPhraseIndex(prev => (prev + 1) % informativePhrases.length);
+      }, 4000);
+      return () => clearInterval(interval);
+  }, []);
+
+  // Effect to save chat history to localStorage
+  useEffect(() => { try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch (error) { console.error("Failed to save chat history to localStorage", error); } }, [chatHistory]);
+
+  // Effect for auto-scrolling chat to the bottom (will move later)
+  useEffect(() => { if (currentPage === 'asistente') { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); } }, [chatHistory, currentPage]);
+
+
+  // Handler for clicking a category button
+  const handleCategoryClick = (category) => {
+    console.log("Category clicked:", category.label);
+    setSelectedCategoryData(category);
+    setActiveModal('categoryDetail');
+  };
+
+  // Handler for sending message (Calls Backend API) - Keep for AssistantPage
+  const handleSendMessage = async () => { /* ... */ };
+
+  // --- Emergency Modal Handlers (unchanged) ---
+  const goToSOSSetupView = () => { /* ... */ };
+  const handleSaveContact = () => { /* ... */ };
+  const createSOSMessage = () => `🚨 ¡EMERGENCIA! Necesito ayuda urgente.`;
+  const handleSendSMS = () => { /* ... */ };
+  const handleSendWhatsApp = () => { /* ... */ };
+
+
+  // --- Theme Class Definitions (unchanged) ---
+  const themeBgClasses = { /* ... */ };
+  const themeTextClasses = { /* ... */ };
+  const themeBorderClasses = { /* ... */ };
+   const themeHeaderBgClasses = { /* ... */ };
+  const themeDarkBgClasses = { /* ... */ };
+  const themeDarkTextClasses = { /* ... */ };
+  const themeDarkBorderClasses = { /* ... */ };
+
+  // Get current theme classes based on state
+  const currentThemeBg = themeBgClasses[themeColor] || 'bg-blue-50';
+  const currentThemeText = themeTextClasses[themeColor] || 'text-blue-900';
+  const currentThemeBorder = themeBorderClasses[themeColor] || 'border-blue-200';
+  const currentThemeHeaderBg = themeHeaderBgClasses[themeColor] || 'bg-blue-600';
+  const currentDarkThemeBg = themeDarkBgClasses[themeColor] || 'dark:bg-gray-800';
+  const currentDarkThemeText = themeDarkTextClasses[themeColor] || 'dark:text-gray-100';
+  const currentDarkThemeBorder = themeDarkBorderClasses[themeColor] || 'dark:border-gray-600';
+
+  // --- Function to render the current page content ---
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'inicio':
+        return <HomePage categories={categories} onCategoryClick={handleCategoryClick} />;
+      case 'categorias':
+        return <CategoriesPage />;
+      case 'asistente':
+        return <AssistantPage />;
+      case 'perfil':
+        return <ProfilePage />;
+      default:
+        return <HomePage categories={categories} onCategoryClick={handleCategoryClick} />;
+    }
+  };
+
+
+  // --- Render JSX ---
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
+      className={`h-screen flex flex-col font-sans ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}
+    >
+      {/* Modals */}
+      {/* *** RESTORED FULL MODAL JSX *** */}
+      <AnimatePresence>
+        {activeModal && (
+          <motion.div // Backdrop
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => { setActiveModal(''); setSelectedCategoryData(null); setEmergencyModalView('main'); }}
+          >
+            <motion.div // Content container
+              key="modal-content"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className={`bg-white rounded-lg shadow-xl p-6 max-w-md w-full ${darkMode ? 'dark:bg-gray-900 dark:text-gray-100' : 'text-gray-900'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Perfil Modal */}
+              {activeModal === 'perfil' && ( <> <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Cuéntanos un poco sobre ti 🧑‍💼</h2> <p className={`text-sm mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>Queremos conocerte mejor para ayudarte como mereces. 💬</p> <input className={`w-full mb-3 p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'}`} placeholder="¿Cómo te llamas?" /> <input className={`w-full mb-3 p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'}`} placeholder="¿A qué te dedicas actualmente?" /> <textarea className={`w-full p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'}`} rows={4} placeholder="¿Qué te gustaría lograr en EE.UU.? Cuéntanos tus sueños, metas o tu historia..." /> <div className="text-right mt-4"><button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors" onClick={() => setActiveModal('')}>Guardar y cerrar</button></div> </>)}
+              {/* Config Modal */}
+              {activeModal === 'config' && ( <> <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Configuración ⚙️</h2> <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Tono del chat</label> <select onChange={(e) => console.log('Tono seleccionado:', e.target.value)} className={`w-full mb-4 p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`} > <option value="profesional">Profesional</option> <option value="amigable">Amigable</option> <option value="serio">Serio</option> <option value="inspirador">Inspirador</option> <option value="resumido">Resumido</option> <option value="explicativo">Explicativo</option> </select> <label className={`block mb-2 font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Color del tema</label> <div className="flex gap-2 mb-4 flex-wrap"> {Object.keys(themeBgClasses).map(color => ( <button key={color} aria-label={`Set theme to ${color}`} onClick={() => setThemeColor(color)} className={`w-6 h-6 rounded-full ${themeHeaderBgClasses[color] || 'bg-gray-500'} border-2 ${themeColor === color ? 'border-black dark:border-white' : 'border-transparent'}`} ></button> ))} </div> <div className="text-right mt-6"><button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors" onClick={() => setActiveModal('')}>Guardar configuración</button></div> </>)}
+              {/* Emergencia Modal */}
+              {activeModal === 'emergencia' && ( <> {emergencyModalView === 'main' && ( <div className="space-y-2"> <h2 className={`text-xl font-bold mb-4 text-center ${darkMode ? 'text-red-400' : 'text-red-600'}`}>🚨 Emergencia</h2> <a href="tel:911" className="block w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white py-2.5 rounded text-center font-semibold transition-colors">Llamar al 911</a> <button onClick={goToSOSSetupView} className="block w-full bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-black dark:text-yellow-900 py-2.5 rounded font-semibold transition-colors" > SOS </button> <a href="https://translate.google.com/?sl=auto&tl=en&op=translate" target="_blank" rel="noopener noreferrer" className="block w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white py-2.5 rounded text-center font-semibold transition-colors">Traductor de emergencia</a> <a href="https://travel.state.gov/content/travel/en/consularnotification.html" target="_blank" rel="noopener noreferrer" className="block w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-2.5 rounded text-center font-semibold transition-colors">Ubicar consulado</a> <button onClick={() => setEmergencyModalView('rights')} className="block w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white py-2.5 rounded font-semibold transition-colors">Ver derechos si detención</button> <a href="https://www.immigrationadvocates.org/nonprofit/legaldirectory/" target="_blank" rel="noopener noreferrer" className="block w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white py-2.5 rounded text-center font-semibold transition-colors">Reportar anónimo</a> <button onClick={() => { setActiveModal(''); setEmergencyModalView('main'); }} className={`mt-4 block w-full py-2 rounded font-semibold transition-colors ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}>Cerrar</button> </div> )} {emergencyModalView === 'rights' && ( <> <h3 className={`text-lg font-semibold mb-3 text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>Tus derechos al ser detenido</h3> <ul className={`list-disc list-inside text-sm space-y-1.5 mb-4 pl-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}> <li>No firmes nada sin un abogado.</li> <li>Tienes derecho a permanecer en silencio.</li> <li>Pide hablar con un abogado inmediatamente.</li> <li>No reveles tu estatus migratorio ni país de origen.</li> <li>Guarda el número de un abogado o familiar.</li> </ul> <button onClick={() => setEmergencyModalView('main')} className={`block w-full py-2 rounded font-semibold transition-colors ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'}`}>Volver</button> </> )} {emergencyModalView === 'sos_setup' && ( <div className="space-y-4"> <h2 className={`text-xl font-bold mb-2 text-center ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>🆘 Mensaje de Emergencia</h2> <p className={`text-sm p-3 rounded ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'}`}> "🚨 ¡EMERGENCIA! Necesito ayuda urgente." </p> <div> <label htmlFor="emergencyPhone" className={`block mb-1 text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Contacto de Emergencia:</label> <div className="flex items-center space-x-2"> <input id="emergencyPhone" type="tel" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)} placeholder="Número con código de país" className={`flex-grow p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'}`} /> <button onClick={handleSaveContact} className={`px-4 py-2 rounded font-medium transition-colors text-sm ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`} > Guardar </button> </div> <p className={`text-xs mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Incluye código de país (ej: 1555...). Presiona 'Guardar'.</p> </div> <div className="space-y-2 pt-3 border-t dark:border-gray-700"> {!isContactSaved && ( <p className="text-xs text-center text-yellow-600 dark:text-yellow-400 font-medium mb-1"> ¡Recuerda guardar el contacto antes de enviar! </p> )} <button onClick={handleSendSMS} disabled={!isContactSaved} className={`w-full py-2.5 rounded font-semibold text-white transition-colors text-sm ${!isContactSaved ? 'bg-red-300 dark:bg-red-800/50 cursor-not-allowed text-white/70 dark:text-white/50' : 'bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700'}`} > Enviar SOS (SMS) </button> <button onClick={handleSendWhatsApp} disabled={!isContactSaved} className={`w-full py-2.5 rounded font-semibold text-white transition-colors text-sm ${!isContactSaved ? 'bg-green-300 dark:bg-green-800/50 cursor-not-allowed text-white/70 dark:text-white/50' : 'bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700'}`} > Enviar por WhatsApp </button> {sosSendAttemptMessage && ( <p className={`text-xs text-center p-2 rounded mt-2 ${sosSendAttemptMessage.startsWith('Error') ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'}`}> {sosSendAttemptMessage} </p> )} <button onClick={() => setEmergencyModalView('main')} className={`block w-full py-2 rounded font-semibold transition-colors mt-2 ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' : 'bg-gray-300 hover:bg-gray-400 text-gray-800'}`}>Volver</button> </div> </div> )} </>)}
+              {/* Category Detail Modal */}
+              {activeModal === 'categoryDetail' && selectedCategoryData && (
+                <>
+                  <h2 className={`text-2xl font-bold mb-3 flex items-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <span className="text-3xl mr-2">{selectedCategoryData.emoji}</span>
+                    {selectedCategoryData.label}
+                  </h2>
+                  <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {selectedCategoryData.content}
+                  </p>
+                  {(extraLinksMap[selectedCategoryData.label] || []).length > 0 && (
+                     <div className="mt-4 pt-3 border-t dark:border-gray-700">
+                        <h3 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Recursos Útiles:</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                         {(extraLinksMap[selectedCategoryData.label] || []).map((link, idx) => (
+                           <li key={idx}>
+                             <a href={link} target="_blank" rel="noopener noreferrer" className={`text-sm underline ${darkMode ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'} `} >
+                               {(() => { try { return new URL(link).hostname; } catch { return link; } })()}
+                             </a>
+                           </li>
+                         ))}
+                       </ul>
+                     </div>
+                  )}
+                   <div className="text-right mt-6">
+                    <button className="px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white rounded font-medium transition-colors text-sm" onClick={() => { setActiveModal(''); setSelectedCategoryData(null); }} >
+                        Cerrar
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header Section */}
+      <header className={`w-full text-white shadow-md py-3 px-4 flex items-center justify-between sticky top-0 z-30 ${currentThemeHeaderBg}`}>
+         {/* *** RESTORED HEADER BUTTONS *** */}
+         <button onClick={() => setSidebarOpen(true)} className="mr-3 text-white text-2xl p-1 rounded hover:bg-black/10 transition-colors" aria-label="Abrir historial de chats" > ☰ </button>
+        <h1 className="text-xl sm:text-2xl font-bold text-center flex-1">
+            Epicentrum Origin
+        </h1>
+        <div className="flex items-center space-x-2">
+           <button onClick={() => setDarkMode(!darkMode)} className="text-2xl p-1 rounded hover:bg-black/10 transition-colors" aria-label={darkMode ? "Activar modo claro" : "Activar modo noche"} > {darkMode ? '🌞' : '🌙'} </button>
+            <button className="text-xl p-1 rounded hover:bg-black/10 transition-colors" aria-label="Cambiar idioma"> <span className="font-semibold">A</span> <span className="text-xs align-super">文</span> </button>
+            <button onClick={() => { setActiveModal('emergencia'); setEmergencyModalView('main'); }} className="text-sm px-3 py-1 rounded-full bg-red-500 hover:bg-red-600 active:bg-red-700 transition-colors font-semibold" aria-label="Abrir menú de emergencia" > <span className="text-lg align-middle">🆘</span> SOS </button>
+        </div>
+      </header>
+
+      {/* Informative Phrases Carousel */}
+      <section className={`w-full border-b px-4 py-3 flex items-center justify-center shadow-sm ${darkMode ? 'bg-gradient-to-r from-gray-700 via-gray-800 to-gray-700 border-gray-600' : 'bg-gradient-to-r from-yellow-100 via-yellow-200 to-yellow-100 border-yellow-300'}`}>
+         {/* *** RESTORED PHRASES CAROUSEL CONTENT *** */}
+         <AnimatePresence mode="wait">
+          <motion.p
+            key={currentPhraseIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.5 }}
+            className={`text-sm font-medium text-center ${darkMode ? 'text-gray-200' : 'text-yellow-800'}`}
+          >
+            {informativePhrases[currentPhraseIndex]}
+          </motion.p>
+        </AnimatePresence>
+      </section>
+
+      {/* Main Content Area - Renders current page */}
+      <main className="flex-1 w-full overflow-y-auto pb-16">
+        {renderCurrentPage()}
+      </main>
+
+      {/* Sidebar for Chat History */}
+      <AnimatePresence>
+        {sidebarOpen && (
+           <> {/* ... Sidebar JSX ... */} </>
+        )}
+      </AnimatePresence>
+
+       {/* Bottom Navigation Bar */}
+      <BottomNavigationBar
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        darkMode={darkMode}
+        themeColor={themeColor}
+       />
+
+    </motion.div>
+  );
+}
